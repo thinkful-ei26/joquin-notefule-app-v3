@@ -35,36 +35,36 @@ mongoose
   });
 
 //   **********note.findById()
-// Note.findById('000000000000000000000003')
-//   .then(result => console.log(result))
-//   .catch(err => console.log(err));
+Note.findById('000000000000000000000003')
+  .then(result => console.log(result))
+  .catch(err => console.log(err));
 
 //**********note.create() */
 
-// Note.create({
-//   title: 'Some title A',
-//   content: 'Some content A'
-// })
-//   .then(Note => {
-//     console.log('this is the note', Note);
-//   })
-//   .catch(err => {
-//     console.log('something went wrong!');
-//   });
+Note.create({
+  title: 'Some title A',
+  content: 'Some content A'
+})
+  .then(Note => {
+    console.log('this is the note', Note);
+  })
+  .catch(err => {
+    console.log('something went wrong!');
+  });
 
 //   **Note.findByIdAndUpdate()
 const updatedNote = {
   title: 'This is a title CHANGE'
 };
 
-// Note.findByIdAndUpdate('000000000000000000000003', updatedNote, {
-//   new: true
-// }).then(Notes =>
-//   console.log('This is the Note', Note)
-//   .catch(error => console.error(error))
-// );
+Note.findByIdAndUpdate('000000000000000000000003', updatedNote, {
+  new: true
+}).then(Notes =>
+  console.log('This is the Note', Note)
+  .catch(error => console.error(error))
+);
 
 //  ******Note.delete()
-// Note.findByIdAndRemove('000000000000000000000003')
-//   .then(Notes => console.log('This is the Delete', Note))
-//   .catch(error => console.error(error));
+Note.findByIdAndRemove('000000000000000000000003')
+  .then(Notes => console.log('This is the Delete', Note))
+  .catch(error => console.error(error));

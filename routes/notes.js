@@ -51,12 +51,14 @@ router.post('/', (req, res, next) => {
     // title: req.body.title,
     // content: req.body.content
   })
-    .then(Note => {
-      res.json(Note);
+    .then(note => {
+      // console.log(note);
+      res.location(`/api/notes/${note._id}`),
+      res.json(note);
     })
     .catch(
       err => {
-        next('something went wrong!');
+        next(err);
       }
 
       // console.log('Create a Note');
@@ -84,7 +86,7 @@ router.put('/:id', (req, res, next) => {
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
   Note.findByIdAndRemove(req.params.id)
-    .then(Note => res.json(Note))
+    .then(() => res.status(204).end())
     .catch(error => next(error));
   // console.log('Delete a Note');
   // res.status(204).end();
