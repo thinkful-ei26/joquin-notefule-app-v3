@@ -17,8 +17,7 @@ describe('Notes API resource', () => {
   // we need each of these hook functions to return a promise
   // we return the value returned by these function calls.
   before(function() {
-    return mongoose
-      .connect(TEST_MONGODB_URI)
+    return mongoose.connect(TEST_MONGODB_URI, { useNewUrlParser: true })
       .then(() => mongoose.connection.db.dropDatabase());
   });
 
@@ -128,28 +127,66 @@ describe('Notes API resource', () => {
     });
   });
 
-//   describe('DELETE endpoint', function() {
-//     // strategy:
-//     //  1. get a note
-//     //  2. make a DELETE request for that note's id
-//     //  3. assert that response has right status code
-//     //  4. prove that notes with the id doesn't exist in db anymore
-//     it('delete a note by id', function() {
-//       let data;
+  //   ************PUT
 
-//       return Note.findOne()
-//         .then(function(_data) {
-//           data = _data;
-//           console.log('data', data);
-//           return chai.request(app).delete(`/notes/${data.id}`);
-//         })
-//         .then(function(res) {
-//           expect(res).to.have.status(204);
-//           return Note.findById(data.id);
-//         })
-//         .then(function(_data) {
-//           expect(_data).to.be.null;
-//         });
-//     });
-//   });
+  describe('PUT endpoint', function() {
+    // strategy:
+    //  1. Get an existing note from db
+    //  2. Make a PUT request to update that note
+    //  3. Prove note returned by request contains data we sent
+    //  4. Prove note in db is correctly updated
+    it('should update fields you send over', function() {
+      const updateData = {
+        title: 'fofofofofofofof',
+        content: 'futuristic fusion'
+      };
+
+      return Note.findOne()
+        .then(function(note) {
+          updateData.id = note.id;
+
+          // make request then inspect it to make sure it reflects
+          // data we sent
+          return chai
+            .request(app)
+            .put(`/notes/${note.id}`)
+            .send(updateData);
+        })
+        .then(function(res) {
+          expect(res).to.have.status(204);
+
+          return Note.findById(updateData.id);
+        })
+        .then(function(note) {
+          expect(note.title).to.equal(updateData.title);
+          expect(note.content).to.equal(updateData.content);
+        });
+    });
+  });
+  // *********DELETE
+
+  describe('DELETE endpoint', function() {
+    // strategy:
+    //  1. get a note
+    //  2. make a DELETE request for that note's id
+    //  3. assert that response has right status code
+    //  4. prove that notes with the id doesn't exist in db anymore
+    it('delete a note by id', function() {
+      let data;
+
+      return Note.findOne()
+        .then(function(_data) {
+          data = _data;
+          console.log('data', data);
+          return chai.request(app).delete(`/notes/${data._id}`);
+        })
+        .then(function(res) {
+          expect(res).to.have.status(204);
+          return Note.findById(data.id);
+        })
+        .then(function(_data) {
+          expect(_data).to.be.null;
+        });
+    });
+  });
 });
