@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
-
+console.log(TEST_MONGODB_URI);
 const Note = require('../models/note');
 
 const { notes } = require('../db/seed/notes');
@@ -17,7 +17,11 @@ describe('Notes API resource', () => {
   // we need each of these hook functions to return a promise
   // we return the value returned by these function calls.
   before(function() {
-    return mongoose.connect(TEST_MONGODB_URI, { useNewUrlParser: true })
+    return mongoose
+      .connect(
+        TEST_MONGODB_URI,
+        { useNewUrlParser: true }
+      )
       .then(() => mongoose.connection.db.dropDatabase());
   });
 
@@ -30,10 +34,11 @@ describe('Notes API resource', () => {
   });
 
   after(function() {
+    console.log('disconnect');
     return mongoose.disconnect();
   });
 
-  describe('GET endpoint', function() {
+  describe('GET api/notes', function() {
     // 1) Call the database **and** the API
     // 2) Wait for both promises to resolve using `Promise.all`
     it('should return all notes', function() {
@@ -101,7 +106,7 @@ describe('Notes API resource', () => {
           .then(function(_res) {
             res = _res;
             expect(res).to.have.status(200);
-            console.log(res.header);
+            // console.log(res.header);
             expect(res).to.have.header('location');
             expect(res).to.be.json;
             expect(res.body).to.be.a('object');
@@ -144,23 +149,26 @@ describe('Notes API resource', () => {
       return Note.findOne()
         .then(function(note) {
           updateData.id = note.id;
-
+          //   console.log('updateData', updateData);
           // make request then inspect it to make sure it reflects
           // data we sent
           return chai
             .request(app)
-            .put(`/notes/${note.id}`)
+            .put(`api/notes/${note.id}`)
             .send(updateData);
         })
         .then(function(res) {
+          //   console.log(res);
           expect(res).to.have.status(204);
-
+          console.log('updateData', updateData.id);
           return Note.findById(updateData.id);
         })
         .then(function(note) {
+          //   console.log('note', note);
           expect(note.title).to.equal(updateData.title);
           expect(note.content).to.equal(updateData.content);
-        });
+        })
+        .catch(err => (err));
     });
   });
   // *********DELETE
@@ -177,8 +185,8 @@ describe('Notes API resource', () => {
       return Note.findOne()
         .then(function(_data) {
           data = _data;
-          console.log('data', data);
-          return chai.request(app).delete(`/notes/${data._id}`);
+          //   console.log('data', data);
+          return chai.request(app).delete(`/api/notes/${data.id}`);
         })
         .then(function(res) {
           expect(res).to.have.status(204);

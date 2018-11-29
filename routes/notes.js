@@ -54,7 +54,7 @@ router.post('/', (req, res, next) => {
     .then(note => {
       // console.log(note);
       res.location(`/api/notes/${note._id}`),
-      res.json(note);
+      res.json(note).end();
     })
     .catch(
       err => {
