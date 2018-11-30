@@ -29,6 +29,7 @@ describe('Notes API resource', () => {
     return Note.insertMany(notes);
   });
 
+
   afterEach(function() {
     return mongoose.connection.db.dropDatabase();
   });
