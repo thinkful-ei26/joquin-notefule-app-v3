@@ -22,9 +22,6 @@ describe('Reality Check', () => {
     expect(2 + 2).to.equal(4);
   });
 
-});
-
-describe('Environment', () => {
 
   it('NODE_ENV should be "test"', () => {
     expect(process.env.NODE_ENV).to.equal('test');

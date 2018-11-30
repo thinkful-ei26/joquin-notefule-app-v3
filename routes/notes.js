@@ -53,8 +53,7 @@ router.post('/', (req, res, next) => {
   })
     .then(note => {
       // console.log(note);
-      res.location(`/api/notes/${note._id}`),
-      res.json(note).end();
+      res.location(`/api/notes/${note._id}`), res.json(note).end();
     })
     .catch(
       err => {
@@ -77,7 +76,9 @@ router.put('/:id', (req, res, next) => {
   };
   Note.findByIdAndUpdate(req.params.id, updatedNote, {
     new: true
-  }).then(Note => res.json(Note).catch(error => next(error)));
+  })
+    .then(Note => res.json(Note))
+    .catch(error => next(error));
 
   // console.log('Update a Note');
   // res.json({ id: 1, title: 'Updated Temp 1' });
