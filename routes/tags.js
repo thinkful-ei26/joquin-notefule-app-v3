@@ -32,21 +32,20 @@ router.get('/:id', (req, res, next) => {
     const err = new Error('id invalid');
     err.status = 404;
   }
-    Tag.findById(req.params.id)
+  Tag.findById(req.params.id)
 
-      //   result? res.status(200).json(result): res.status(404).json({ "error" : "Id not found"});
-      .then(result => {
-        if (result === false) {
-          res.json(result).status(204);
-        }
-        res.json(result).status(200);
-      })
-      .catch(err => {
-        console.err('Status 404');
-        next(err);
-      })
-  );
-};
+    //   result? res.status(200).json(result): res.status(404).json({ "error" : "Id not found"});
+    .then(result => {
+      if (result === false) {
+        res.json(result).status(204);
+      }
+      res.json(result).status(200);
+    })
+    .catch(err => {
+      console.err('Status 404');
+      next(err);
+    });
+});
 
 // POST /tags to create a new tag
 //     Add validation that protects against missing name field
@@ -78,17 +77,23 @@ router.put('/:id', (req, res, next) => {
   const updatedTag = {
     name: req.body.name
   };
-  //   console.log('ObjectId', ObjectId);
-  if (!req.body.name || req.body.name === '') {
-    // console.log(req.body.name);
-    return res.status(400).json({ message: 'Missing Name' });
+  if (req.body.name) {
+    Tag.findByIdAndUpdate(req.params.id, updatedTag, {
+      new: true
+    })
+      .then(Tag => res.json(Tag))
+      .catch(error => next(error));
   }
-  Tag.findByIdAndUpdate(req.params.id, updatedTag, {
-    new: true
-  })
-    .then(Tag => res.json(Tag))
-    .catch(error => next(error));
 });
+//   console.log('ObjectId', ObjectId);
+
+//   if (!req.body.name || req.body.name === '') {
+//     // console.log(req.body.name);
+//     return res.status(400).json({ message: 'Missing Name' });
+//   }
+//   Tag.findByIdAndUpdate(req.params.id, updatedTag, {
+//     new: true
+//   })
 
 // DELETE /tags by id deletes the tag AND removes it from the notes collection
 //     Remove the tag

@@ -22,23 +22,18 @@ router.get('/:id', (req, res, next) => {
     const err = new Error('id invalid');
     err.status = 404;
   }
-
-    Folder.findById(req.params.id)
-
-      //   result? res.status(200).json(result): res.status(404).json({ "error" : "Id not found"});
-      .then(result => {
-        if (result === false) {
-          res.json(result).status(204);
-        }
-        res.json(result).status(200);
-      })
-      .catch(err => {
-        console.err('Status 404');
-        next(err);
-      })
-  );
-};
-
+  Folder.findById(req.params.id)
+    .then(result => {
+      if (result === false) {
+        res.json(result).status(204);
+      }
+      res.json(result).status(200);
+    })
+    .catch(err => {
+      console.err('Status 404');
+      next(err);
+    });
+});
 // if(!mongoose.Types.ObjectId.isValid(id)){ const err = new Error('id invalid'); err.status = 400; return next(err); }
 
 router.post('/', (req, res, next) => {
