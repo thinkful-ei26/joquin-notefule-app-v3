@@ -16,20 +16,41 @@ const Note = require('../models/note');
 //   ]);
 
 // });
-
 router.get('/', (req, res, next) => {
-  const { searchTerm } = req.query;
-  const re = new RegExp(searchTerm, 'i');
-  Note.find({ $or: [{ title: re }, { content: re }] })
-    .then(results => res.json(results))
-    // .then(() => {
-    //   return mongoose.disconnect();
-    // })
-    .catch(err => {
-      console.error(`ERROR: ${err.message}`);
-      console.error(err);
-    });
+  const { searchTerm, folderId, tagId } = req.query;
+  const filter = {};
+  if (folderId) {
+    filter.folderId = folderId;
+  }
+  if (tagId) {
+    filter.tags = tagId;
+  }
+  if (searchTerm) {
+    const re = new RegExp(searchTerm, 'i');
+    filter.$or = [{ title: re }, { content: re }];
+  }
+  Note.find(filter)
+    .populate('tags')
+    .sort({ updateAt: 'desc' })
+    .then(notes => {
+      res.json(notes);
+    })
+    .catch(err => next(err));
 });
+
+// router.get('/', (req, res, next) => {
+//   const { searchTerm } = req.query;
+//   const re = new RegExp(searchTerm, 'i');
+//   Note.find({ $or: [{ title: re }, { content: re }] })
+//     .then(results => res.json(results))
+//     // .then(() => {
+//     //   return mongoose.disconnect();
+//     // })
+//     .catch(err => {
+//       console.error(`ERROR: ${err.message}`);
+//       console.error(err);
+//     });
+// });
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
@@ -37,8 +58,6 @@ router.get('/:id', (req, res, next) => {
     .then(result => res.json(result))
     .catch(err => next(err));
 
-  // console.log('Get a Note');
-  // res.json({ id: 1, title: 'Temp 1' });
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
