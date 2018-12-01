@@ -110,12 +110,11 @@ describe('Notes API resource', () => {
           .send(newItem)
           .then(function(_res) {
             res = _res;
-            expect(res).to.have.status(200);
-            // console.log(res.header);
+            expect(res).to.have.status(201);
             expect(res).to.have.header('location');
             expect(res).to.be.json;
             expect(res.body).to.be.a('object');
-            expect(res.body).to.have.keys(
+            expect(res.body).to.have.all.keys(
               'id',
               'title',
               'content',
