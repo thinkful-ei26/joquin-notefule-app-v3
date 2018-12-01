@@ -60,7 +60,7 @@ router.post('/', (req, res, next) => {
   })
     .then(tag => {
       // console.log(note);
-      res.location(`/api/tags/${tag._id}`), res.json(tag).end();
+      res.location(`/api/tags/${tag._id}`), res.status(201).end();
     })
     .catch(err => {
       next(err);
