@@ -31,9 +31,7 @@ router.get('/:id', (req, res, next) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     const err = new Error('id invalid');
     err.status = 404;
-    return next(err);
   }
-  return (
     Tag.findById(req.params.id)
 
       //   result? res.status(200).json(result): res.status(404).json({ "error" : "Id not found"});
@@ -48,7 +46,7 @@ router.get('/:id', (req, res, next) => {
         next(err);
       })
   );
-});
+};
 
 // POST /tags to create a new tag
 //     Add validation that protects against missing name field
