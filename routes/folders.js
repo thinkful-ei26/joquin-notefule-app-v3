@@ -38,11 +38,18 @@ router.get('/:id', (req, res, next) => {
 
 router.post('/', (req, res, next) => {
   const { name } = req.body;
+
+  if (!name) {
+    const err = new Error('Missing `name` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
   Folder.create({
     name
   })
     .then(folder => {
-      res.location(`/api/notes/${folder._id}`), res.status(200).end();
+      res.location(`${req.originalUrl}/${folder.id}`), res.status(201).json(folder);
     })
     .catch(err => {
       if (err.code === 11000) {

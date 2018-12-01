@@ -86,38 +86,26 @@ describe('Folder API resource', () => {
       const newItem = {
         name: 'Hanga Banga'
       };
-
-      let res;
-      // 1) First, call the API
-      return (
-        chai
-          .request(app)
-          .post('/api/folders')
-          .send(newItem)
-          .then(function(_res) {
-            res = _res;
-            expect(res).to.have.status(200);
-            // console.log(res.header);
-            expect(res).to.have.header('location');
-            expect(res).to.be.json;
-            expect(res.body).to.be.a('object');
-            expect(res.body).to.have.keys(
-              'id',
-              'name',
-              'createdAt',
-              'updatedAt'
-            );
-            // 2) then call the database
-            return Folder.findById(res.body.id);
-          })
-          // 3) then compare the API response to the database results
-          .then(data => {
-            expect(res.body.id).to.equal(data.id);
-            expect(res.body.name).to.equal(data.name);
-            expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
-            expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
-          })
-      );
+      let body; // used to pass 'res.body'along then chain.
+      return chai
+        .request(app)
+        .post('/api/folders')
+        .send(newItem)
+        .then(function(res) {
+          body = res.body; //capture res.body in lexical.
+          expect(res).to.have.status(201);
+          expect(res).to.have.header('location'); // the location response header is used to redirect.
+          expect(res).to.be.json;
+          expect(body).to.be.a('object');
+          expect(body).to.have.all.keys('id', 'name', 'createdAt', 'updatedAt');
+          return Folder.findById(res.body.id);
+        })
+        .then(data => {
+          expect(body.id).to.equal(data.id);
+          expect(body.name).to.equal(data.name);
+          expect(new Date(body.createdAt)).to.eql(data.createdAt);
+          expect(new Date(body.updatedAt)).to.eql(data.updatedAt);
+        });
     });
   });
 
@@ -132,7 +120,6 @@ describe('Folder API resource', () => {
     it('should update fields you send over', function() {
       const updateData = {
         name: 'fofofofofofofof'
-        
       };
 
       return Folder.findOne()
