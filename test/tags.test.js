@@ -95,7 +95,7 @@ describe('Tag API resource', () => {
           .send(newItem)
           .then(function(_res) {
             res = _res;
-            expect(res).to.have.status(200);
+            expect(res).to.have.status(201);
             // console.log(res.header);
             expect(res).to.have.header('location');
             expect(res).to.be.json;

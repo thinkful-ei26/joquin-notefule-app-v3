@@ -42,7 +42,7 @@ router.post('/', (req, res, next) => {
     name
   })
     .then(folder => {
-      res.location(`/api/notes/${folder._id}`), res.status(201).end();
+      res.location(`/api/notes/${folder._id}`), res.status(200).end();
     })
     .catch(err => {
       if (err.code === 11000) {
