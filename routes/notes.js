@@ -6,16 +6,6 @@ const router = express.Router();
 const Note = require('../models/note');
 
 /* ========== GET/READ ALL ITEMS ========== */
-// router.get('/', (req, res, next) => {
-
-//   console.log('Get All Notes');
-//   res.json([
-//     { id: 1, title: 'Temp 1' },
-//     { id: 2, title: 'Temp 2' },
-//     { id: 3, title: 'Temp 3' }
-//   ]);
-
-// });
 router.get('/', (req, res, next) => {
   const { searchTerm, folderId, tagId } = req.query;
   const filter = {};
@@ -38,55 +28,38 @@ router.get('/', (req, res, next) => {
     .catch(err => next(err));
 });
 
-// router.get('/', (req, res, next) => {
-//   const { searchTerm } = req.query;
-//   const re = new RegExp(searchTerm, 'i');
-//   Note.find({ $or: [{ title: re }, { content: re }] })
-//     .then(results => res.json(results))
-//     // .then(() => {
-//     //   return mongoose.disconnect();
-//     // })
-//     .catch(err => {
-//       console.error(`ERROR: ${err.message}`);
-//       console.error(err);
-//     });
-// });
-
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
   Note.findById(req.params.id)
     .then(result => res.json(result))
     .catch(err => next(err));
-
 });
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content } = req.body;
-  Note.create({
-    title,
-    content
+  const { title, content, folderId } = req.body;
+  if (!title) {
+    const err = new Error('Missing `title` in requesnt body');
+    err.status = 400;
+    return next(err);
+  }
 
-    // title: req.body.title,
-    // content: req.body.content
-  })
-    .then(note => {
-      // console.log(note);
-      res.location(`/api/notes/${note._id}`), res.json(note).end();
+  if (folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
+    const err = new Error('The `folderId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+  const newNote = { title, content, folderId };
+  if (folderId === '') {
+    delete newNote.folderId;
+  }
+
+  Note.create(newNote)
+    .then(result => {
+      res.location(`/api/notes/${newNote._id}`), res.json(newNote).end();
     })
-    .catch(
-      err => {
-        next(err);
-      }
-
-      // console.log('Create a Note');
-      // res
-      //   .location('path/to/new/document')
-      //   .status(201)
-      //   .json({ id: 2, title: 'Temp 2' });
-    );
+    .catch(err => next(err));
 });
-
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
   const updatedNote = {
@@ -98,9 +71,6 @@ router.put('/:id', (req, res, next) => {
   })
     .then(Note => res.json(Note))
     .catch(error => next(error));
-
-  // console.log('Update a Note');
-  // res.json({ id: 1, title: 'Updated Temp 1' });
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
@@ -108,8 +78,6 @@ router.delete('/:id', (req, res, next) => {
   Note.findByIdAndRemove(req.params.id)
     .then(() => res.status(204).end())
     .catch(error => next(error));
-  // console.log('Delete a Note');
-  // res.status(204).end();
 });
 
 module.exports = router;
