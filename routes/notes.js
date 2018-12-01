@@ -39,7 +39,7 @@ router.get('/:id', (req, res, next) => {
 router.post('/', (req, res, next) => {
   const { title, content, folderId, tags = [] } = req.body;
   if (!title) {
-    const err = new Error('Missing `title` in requesnt body');
+    const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
@@ -73,6 +73,7 @@ router.post('/', (req, res, next) => {
 });
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
+  
   const { id } = req.params;
   const { title, content, folderId, tags = [] } = req.body;
   /******validate input***** */
@@ -87,7 +88,7 @@ router.put('/:id', (req, res, next) => {
     return next(err);
   }
   if (tags) {
-    const badIds = tags.filter(tag => !mongoose.Types.ObjectId.isValid(tag));
+    const badIds = tags.filter((tag) => !mongoose.Types.ObjectId.isValid(tag));
     if (badIds.length) {
       const err = new Error('The `tags` array contains an invalid `id`');
       err.status = 400;
@@ -102,10 +103,17 @@ router.put('/:id', (req, res, next) => {
     delete updatedNote.folderId;
     updatedNote.$unset = {folderId: ''};
   }
-  Note.findByIdAndUpdate(req.params.id, updatedNote, {
+  Note.findByIdAndUpdate(id, updatedNote, {
     new: true
   })
-    .then(Note => res.json(Note))
+    .then(result => {
+      if(result){
+        res.json(result);
+      }else {
+        next();
+      }
+    })
+    // (Note => res.json(Note))
     .catch(error => next(error));
 });
 

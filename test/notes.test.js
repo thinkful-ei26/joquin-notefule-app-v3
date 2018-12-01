@@ -31,7 +31,6 @@ describe('Notes API resource', () => {
     return Note.insertMany(notes);
   });
 
-
   afterEach(function() {
     return mongoose.connection.db.dropDatabase();
   });
@@ -92,7 +91,7 @@ describe('Notes API resource', () => {
         });
     });
   });
-
+  // ********POST
   describe('POST /api/notes', function() {
     it('should create and return a new item when provided valid data', function() {
       const newItem = {
@@ -135,45 +134,86 @@ describe('Notes API resource', () => {
           })
       );
     });
+    it('should return an error when missing "title" field', function() {
+      const newItem = {
+        content: 'Lorem ipsum dolor sit amet, sed do eiusmod tempor...'
+      };
+      return chai
+        .request(app)
+        .post('/api/notes')
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `title` in request body');
+        });
+    });
   });
 
   //   ************PUT
 
   describe('PUT endpoint', function() {
-    // strategy:
-    //  1. Get an existing note from db
-    //  2. Make a PUT request to update that note
-    //  3. Prove note returned by request contains data we sent
-    //  4. Prove note in db is correctly updated
     it('should update fields you send over', function() {
       const updateData = {
-        title: 'fofofofofofofof',
-        content: 'futuristic fusion'
+        'title': 'fofofofofofofof',
+        'content': 'futuristic fusion'
       };
-
+      let data;
       return Note.findOne()
-        .then(function(note) {
-          updateData.id = note.id;
-          //   console.log('updateData', updateData);
-          // make request then inspect it to make sure it reflects
-          // data we sent
+        .then(_data => {
+          data = _data;
           return chai
             .request(app)
-            .put(`api/notes/${note.id}`)
+            .put(`/api/notes/${data.id}`)
             .send(updateData);
         })
         .then(function(res) {
-          //   console.log(res);
-          expect(res).to.have.status(204);
-          console.log('updateData', updateData.id);
-          return Note.findById(updateData.id);
-        })
-        .then(function(note) {
-          //   console.log('note', note);
-          expect(note.title).to.equal(updateData.title);
-          expect(note.content).to.equal(updateData.content);
-        })
-        .catch(err => (err));
+          expect(res).to.have.status(200);
+          expect(res.body).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body).to.have.all.keys(
+            'id',
+            'title',
+            'content',
+            'createdAt',
+            'updatedAt',
+            'folderId',
+            'tags'
+          );
+          expect(res.body.id).to.equal(data.id);
+          expect(res.body.title).to.equal(updateData.title);
+          expect(res.body.content).to.equal(updateData.content);
+          expect(new Date(res.body.createdAt)).to.deep.equal(data.createdAt);
+          expect(new Date(res.body.updatedAt)).to.greaterThan(data.updatedAt);
+        });
+    });
+    it('should respond with status 400 an an error message when `id` is not valid', function() {
+      const updateData = {
+        title: 'What about dogs?!',
+        content: 'woof woof'
+      };
+      return chai
+        .request(app)
+        .put('api/notes/NOT_A_VALID_ID')
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res.body.message).to.eq('The `id` is not valid');
+        });
+    });
+    it('should respond with a 404 for an id that does not exist', function() {
+      const updateData = {
+        title: 'What about dogs?!',
+        content: 'woof woof'
+      };
+      return chai
+        .request(app)
+        .put('/api/notes/DOESNOTEXIST')
+        .send(updateData)
+        .then(res => {
+          expect(res).to.have.status(404);
+        });
     });
   });
   // *********DELETE
@@ -186,19 +226,17 @@ describe('Notes API resource', () => {
     //  4. prove that notes with the id doesn't exist in db anymore
     it('delete a note by id', function() {
       let data;
-
       return Note.findOne()
         .then(function(_data) {
           data = _data;
-          //   console.log('data', data);
           return chai.request(app).delete(`/api/notes/${data.id}`);
         })
         .then(function(res) {
           expect(res).to.have.status(204);
-          return Note.findById(data.id);
+          return Note.countDocuments({ _id: data.id });
         })
-        .then(function(_data) {
-          expect(_data).to.be.null;
+        .then(count => {
+          expect(count).to.equal(0);
         });
     });
   });
