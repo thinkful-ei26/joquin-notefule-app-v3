@@ -2,18 +2,22 @@
 
 const express = require('express');
 const morgan = require('morgan');
+const mongoose = require('mongoose');
 
-const { PORT } = require('./config');
+const { PORT, MONGODB_URI } = require('./config');
 
 const notesRouter = require('./routes/notes');
-
+const foldersRouter = require('./routes/folders');
+const tagsRouter = require('./routes/tags');
 // Create an Express application
 const app = express();
 
 // Log all requests. Skip logging during
-app.use(morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'common', {
-  skip: () => process.env.NODE_ENV === 'test'
-}));
+app.use(
+  morgan(process.env.NODE_ENV === 'development' ? 'dev' : 'common', {
+    skip: () => process.env.NODE_ENV === 'test'
+  })
+);
 
 // Create a static webserver
 app.use(express.static('public'));
@@ -23,6 +27,8 @@ app.use(express.json());
 
 // Mount routers
 app.use('/api/notes', notesRouter);
+app.use('/api/folders', foldersRouter);
+app.use('/api/tags', tagsRouter);
 
 // Custom 404 Not Found route handler
 app.use((req, res, next) => {
@@ -41,14 +47,27 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
-
-// Listen for incoming connections
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, function () {
-    console.info(`Server listening on ${this.address().port}`);
-  }).on('error', err => {
-    console.error(err);
-  });
+if (require.main === module) {
+  mongoose
+    .connect(
+      MONGODB_URI,
+      { useNewUrlParser: true }
+    )
+    .catch(err => {
+      console.error(`ERROR: ${err.message}`);
+      console.error('\n === Did you remember to start `mongod`? === \n');
+      console.error(err);
+    });
+  // Listen for incoming connections
+  if (process.env.NODE_ENV !== 'test') {
+    app
+      .listen(PORT, function() {
+        console.info(`Server listening on ${this.address().port}`);
+      })
+      .on('error', err => {
+        console.error(err);
+      });
+  }
 }
 
 module.exports = app; // Export for testing
