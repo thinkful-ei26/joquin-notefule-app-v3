@@ -82,41 +82,57 @@ describe('Tag API resource', () => {
 
   describe('POST /api/tags', function() {
     it('should create and return a new item when provided valid data', function() {
-      const newItem = {
-        name: 'Hanga Banga'
-      };
+      const newItem = {'name': 'newTag' };
+      let body;
+      return chai.request(app)
+        .post('/api/tags')
+        .send(newItem)
+        .then(function(res) {
+          body = res.body;
+          expect(res).to.have.status(201);
+          expect(res).to.have.header('location');
+          expect(res).to.be.json;
+          expect(body).to.be.a('object');
+          expect(body).to.have.keys('id', 'name', 'createdAt', 'updatedAt');
+          return Tag.findById(body.id);
+        })
+         
+        .then(data => {
+          expect(body.id).to.equal(data.id);
+          expect(body.name).to.equal(data.name);
+          expect(new Date(body.createdAt)).to.deep.equal(data.createdAt);
+          expect(new Date(body.updatedAt)).to.deep.equal(data.updatedAt);
+        });
+    });
+    it('should return an error if missing name', function() {
+      const newItem = { 'foo': 'bar' };
+      return chai
+        .request(app)
+        .post('/api/tags')
+        .send(newItem)
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Missing `name` in request body');
+        });
+    });
 
-      let res;
-      // 1) First, call the API
-      return (
-        chai
-          .request(app)
-          .post('/api/tags')
-          .send(newItem)
-          .then(function(_res) {
-            res = _res;
-            expect(res).to.have.status(201);
-            // console.log(res.header);
-            expect(res).to.have.header('location');
-            expect(res).to.be.json;
-            expect(res.body).to.be.a('object');
-            expect(res.body).to.have.keys(
-              'id',
-              'name',
-              'createdAt',
-              'updatedAt'
-            );
-            // 2) then call the database
-            return Tag.findById(res.body.id);
-          })
-          // 3) then compare the API response to the database results
-          .then(data => {
-            expect(res.body.id).to.equal(data.id);
-            expect(res.body.name).to.equal(data.name);
-            expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
-            expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
-          })
-      );
+    it('should return an error when given a duplicate name', function() {
+      return Tag.findOne()
+        .then(data => {
+          const newItem = { 'name': data.name };
+          return chai
+            .request(app)
+            .post('/api/tags')
+            .send(newItem);
+        })
+        .then(res => {
+          expect(res).to.have.status(400);
+          expect(res).to.be.json;
+          expect(res.body).to.be.a('object');
+          expect(res.body.message).to.equal('Tag name already exists');
+        });
     });
   });
 
@@ -131,7 +147,6 @@ describe('Tag API resource', () => {
     it('should update fields you send over', function() {
       const updateData = {
         name: 'fofofofofofofof'
-        
       };
 
       return Tag.findOne()

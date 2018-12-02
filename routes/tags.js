@@ -47,32 +47,30 @@ router.get('/:id', (req, res, next) => {
     });
 });
 
-// POST /tags to create a new tag
-//     Add validation that protects against missing name field
-//     A successful insert returns a location header and a 201 status
-//     Add condition that checks for a duplicate key error with code 11000 and responds with a helpful error message
-
+// *********POST
 router.post('/', (req, res, next) => {
   const { name } = req.body;
-  Tag.create({
-    name
-  })
-    .then(tag => {
-      // console.log(note);
-      res.location(`/api/tags/${tag._id}`), res.status(201).end();
+  const newTag = { name };
+  if (!name) {
+    const err = new Error('Missing `name` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  Tag.create(newTag)
+    .then(result => {
+      res.location(`${req.originalUrl}/${result.id}`), res.status(201).json(result);
     })
     .catch(err => {
+      if ((err.code === 11000)) {
+        err = new Error('Tag name already exists');
+        err.status = 400;
+      }
       next(err);
     });
 });
 
-// PUT /tags by id to update a tag
-//     Add validation which protects against missing name field
-//     Add validation which protects against an invalid ObjectId
-//     Add condition that checks the result and returns a 200 response with the result or a 404 Not Found
-//         Ensure you are returning the updated/modified document, not the document prior to the update
-//     Add condition that checks for a duplicate key error with code 11000 and responds with a helpful error message
-
+// *******PUT
 router.put('/:id', (req, res, next) => {
   const updatedTag = {
     name: req.body.name
@@ -85,21 +83,7 @@ router.put('/:id', (req, res, next) => {
       .catch(error => next(error));
   }
 });
-//   console.log('ObjectId', ObjectId);
-
-//   if (!req.body.name || req.body.name === '') {
-//     // console.log(req.body.name);
-//     return res.status(400).json({ message: 'Missing Name' });
-//   }
-//   Tag.findByIdAndUpdate(req.params.id, updatedTag, {
-//     new: true
-//   })
-
-// DELETE /tags by id deletes the tag AND removes it from the notes collection
-//     Remove the tag
-//     Using $pull, remove the tag from the tags array in the notes collection.
-//     Add condition that checks the result and returns a 200 response with the result or a 204 status
-// Returning an error on $pull line 113, still trying to fix. Mongo version problem?
+// *********DELETE
 router.delete('/:id', (req, res, next) => {
   const id = req.params.id;
 
@@ -117,7 +101,7 @@ router.delete('/:id', (req, res, next) => {
 
   Promise.all([deleteTagId, deleteTagFromNotes])
     .then(() => {
-      return res.sendStatus(204);
+      res.sendStatus(204);
     })
     .catch(err => {
       next(err);
